@@ -9,9 +9,10 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     [SerializeField] private float _velocidad = 3f;
     [SerializeField] private float _fuerzaSalto = 20f;
-    [SerializeField] private bool _enSuelo;
+    [SerializeField] private bool _inGround;
+    [SerializeField] private bool _isWin;
     [SerializeField] private Transform spawnPoint;
-    [SerializeField] private Transform suelo;
+    
     [SerializeField] private LayerMask layerMask;
     //[SerializeField] private FixedJoystick joystick;
     //[SerializeField] private Button botonSalto;
@@ -21,7 +22,7 @@ public class Player : MonoBehaviour
     //[SerializeField] private float vidaTotal = 100f;
     private float vidaActual;
     private bool coolDownSalto = true;
-    private bool coolDownDisparo = true;
+    //private bool coolDownDisparo = true;
     private bool coolDownMuerte;
 
     //DISPARO
@@ -63,8 +64,6 @@ public class Player : MonoBehaviour
         //personajeDisparo();
 
 
-
-
         if (Input.GetKey(KeyCode.Space))
         {
             isJump = true;
@@ -92,18 +91,19 @@ public class Player : MonoBehaviour
 
     public void saltaSiSuelo()
     {
-        if (isJump && _enSuelo && coolDownSalto)
+        if (isJump && _inGround)
         {
             _rigid.AddForce(new Vector2(0, _fuerzaSalto));
-            StartCoroutine(CoroutineSalto());
+            // StartCoroutine(CoroutineSalto());
         }
     }
 
     private void FixedUpdate()
     {
-        _enSuelo = comprobarSuelo2();/////VARIABLE PARA COMPROBAR SI TOCA SUELO
-        animator.SetBool("inSuelo", _enSuelo);//VARIABLE PARA EL ANIMATOR
-        //_rigid.velocity = new Vector2(Input.GetAxis("Horizontal") * _velocidad, Input.GetAxis("Vertical") * _velocidad); PARA HORIZONTAL Y VERTICAL
+
+        _inGround = comprobarSuelo3();/////VARIABLE PARA COMPROBAR SI TOCA SUELO
+        animator.SetBool("isGround", _inGround);//VARIABLE PARA EL ANIMATOR
+                                                //_rigid.velocity = new Vector2(Input.GetAxis("Horizontal") * _velocidad, Input.GetAxis("Vertical") * _velocidad); PARA HORIZONTAL Y VERTICAL
 
 
         //LINEA PARA MOVERLO CON JOYSTICK
@@ -122,40 +122,50 @@ public class Player : MonoBehaviour
         saltaSiSuelo();
         */
         // LA LINEA PARA MOVERLO CON LAS TECLAS
-        if (Input.GetAxis("Horizontal") > 0)
+        /*if (Input.GetAxis("Horizontal") >= 0)
         {
             _rigid.velocity = new Vector2(Input.GetAxis("Horizontal") * _velocidad, _rigid.velocity.y);
+            //transform.localScale = new Vector3(1, 1, 1);
+        }*/
+        /*if (Input.GetAxis("Horizontal") <= 0)
+        {
+            _rigid.velocity = new Vector2(Input.GetAxis("Horizontal") * _velocidad, _rigid.velocity.y);
+            //transform.localScale = new Vector3(-1, 1, 1);
+        }*/
+        _rigid.velocity = new Vector2(Input.GetAxis("Horizontal") * _velocidad, _rigid.velocity.y);
+        if (_rigid.velocity.x > 0)
+        {
             transform.localScale = new Vector3(1, 1, 1);
         }
-        if (Input.GetAxis("Horizontal") < 0)
+        else if(_rigid.velocity.x < 0)
         {
-            _rigid.velocity = new Vector2(Input.GetAxis("Horizontal") * _velocidad, _rigid.velocity.y);
             transform.localScale = new Vector3(-1, 1, 1);
         }
-        animator.SetFloat("velx", Mathf.Abs(_rigid.velocity.x));
+
+        animator.SetFloat("Speed", Mathf.Abs(_rigid.velocity.x));
         saltaSiSuelo();
     }
 
-    private bool comprobarSuelo1()
+    /*private bool comprobarSuelo1()
     {
         return Physics2D.OverlapCircle(suelo.position, 0.04f, layerMask);
-    }
+    }*/
 
     private bool comprobarSuelo2()
     {
-        float tamanyoRayo = 1.2f;
+        float tamanyoRayo = 0.5f;
         //SOLO DIBUJAR
-        Debug.DrawRay(transform.position, new Vector2(0, tamanyoRayo * -1), Color.cyan);
-        return Physics2D.Raycast(transform.position, Vector2.down, tamanyoRayo, layerMask);
+        Debug.DrawRay(new Vector2(transform.position.x, transform.position.y + 0.2f), new Vector2(0, tamanyoRayo * -1), Color.cyan);
+        return Physics2D.Raycast(new Vector2(transform.position.x,transform.position.y + 0.2f), Vector2.down, tamanyoRayo, layerMask);
     }
 
     private bool comprobarSuelo3()
     {
-        BoxCast(new Vector2(transform.position.x - -0.05f, transform.position.y - 0.95f),//ESTE ES SOLO PARA COMPROBAR LUEGO HAY QUE PASARLO AABAJO
-            new Vector2(0.4f, 0.2f), 0f, new Vector2(0, 0), 0f, layerMask);
+        BoxCast(new Vector2(transform.position.x - 0.015f, transform.position.y + 0.01f),//ESTE ES SOLO PARA COMPROBAR LUEGO HAY QUE PASARLO AABAJO
+            new Vector2(0.5f, 0.2f), 0f, new Vector2(0, 0), 0f, layerMask);
 
-        return Physics2D.BoxCast(new Vector2(transform.position.x - 0.04f, transform.position.y - 0.66f),
-            new Vector2(1.0f, 0.8f), 0f, new Vector2(0, 0), 0f, layerMask);//EL LAYER MASK HAY QUE PASARSELO AL ATRIBUTO PUBLIC LAYERMASK 
+        return Physics2D.BoxCast(new Vector2(transform.position.x - 0.015f, transform.position.y + 0.01f),
+            new Vector2(0.5f, 0.2f), 0f, new Vector2(0, 0), 0f, layerMask);//EL LAYER MASK HAY QUE PASARSELO AL ATRIBUTO PUBLIC LAYERMASK 
     }
 
     //SOLO DIBUJA
